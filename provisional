@@ -1,0 +1,11 @@
+qp = QuadraticProgram()
+for i in range(n_assets):
+    qp.binary_var(name=f'x{i}')  # x_i ∈ {0, 1}
+
+# Función objetivo
+linear = (-mean_returns + risk_factor * np.sum(cov_matrix, axis=1)).tolist()
+quadratic = (risk_factor * cov_matrix).tolist()
+
+qp.minimize(linear=linear, quadratic=quadratic)
+qp.linear_constraint({f'x{i}': 1 for i in range(n_assets)}, sense='==', rhs=budget, name='budget')
+
