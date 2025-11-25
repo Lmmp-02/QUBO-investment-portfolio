@@ -9,3 +9,32 @@ quadratic = (risk_factor * cov_matrix).tolist()
 qp.minimize(linear=linear, quadratic=quadratic)
 qp.linear_constraint({f'x{i}': 1 for i in range(n_assets)}, sense='==', rhs=budget, name='budget')
 
+
+
+qaoa = QAOA(sampler=StatevectorSampler(), optimizer=COBYLA(), reps=3)
+
+qaoa_optimizer = MinimumEigenOptimizer(qaoa)
+
+result = qaoa_optimizer.solve(qp)
+
+
+CIRQ:
+
+linear = -mean_returns + risk_factor * cov_matrix.sum(axis=1)
+quadratic = risk_factor * cov_matrix
+penalty = 10.0
+
+# QUBO = términos cuadráticos + términos lineales en diagonal + penalización
+qubo = quadratic + np.diag(linear + penalty * (1 - 2*budget))
+qubo += penalty * (np.ones_like(quadratic) - np.eye(n_assets))
+
+qubits = cirq.LineQubit.range(n_assets)
+
+cirq.H.on_each(qubits)
+cirq.ZZ(qi, qj) ** (gamma * qubo[i, j] / np.pi)
+cirq.rx(2 * beta).on_each(qubits)
+
+result = minimize(lambda p: objective(qubo, reps, shots=1000),
+    initial_params, method='COBYLA')
+
+measurements = cirq.Simulator().run(final_circuit, repetitions=5000)
