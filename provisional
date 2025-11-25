@@ -24,7 +24,7 @@ linear = -mean_returns + risk_factor * cov_matrix.sum(axis=1)
 quadratic = risk_factor * cov_matrix
 penalty = 10.0
 
-# QUBO = términos cuadráticos + términos lineales en diagonal + penalización
+# Construcción del QUBO
 qubo = quadratic + np.diag(linear + penalty * (1 - 2*budget))
 qubo += penalty * (np.ones_like(quadratic) - np.eye(n_assets))
 
